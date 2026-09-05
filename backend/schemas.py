@@ -1,6 +1,6 @@
 from datetime import datetime
-from typing import Optional, List
-from pydantic import BaseModel, ConfigDict, EmailStr
+from typing import Optional, List, Dict, Any
+from pydantic import BaseModel, ConfigDict
 
 # Health check response schema
 class HealthCheckResponse(BaseModel):
@@ -10,21 +10,25 @@ class HealthCheckResponse(BaseModel):
     version: str
     timestamp: datetime
 
-# User Schemas
-class UserBase(BaseModel):
+# Authentication Schemas
+class LoginRequest(BaseModel):
+    username_or_email: str
+    password: str
+
+class UserResponse(BaseModel):
+    id: int
     username: str
     email: str
-    role: str = "staff"
-
-class UserCreate(UserBase):
-    pass
-
-class UserResponse(UserBase):
-    id: int
+    role: str
     created_at: datetime
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+class LoginResponse(BaseModel):
+    token: str
+    token_type: str = "bearer"
+    user: UserResponse
 
 # Patient Schemas
 class PatientBase(BaseModel):
@@ -39,23 +43,6 @@ class PatientCreate(PatientBase):
     pass
 
 class PatientResponse(PatientBase):
-    id: int
-    created_at: datetime
-    updated_at: datetime
-
-    model_config = ConfigDict(from_attributes=True)
-
-# IntakeSession Schemas
-class IntakeSessionBase(BaseModel):
-    patient_id: int
-    user_id: Optional[int] = None
-    status: str = "active"
-    chief_complaint: Optional[str] = None
-
-class IntakeSessionCreate(IntakeSessionBase):
-    pass
-
-class IntakeSessionResponse(IntakeSessionBase):
     id: int
     created_at: datetime
     updated_at: datetime
@@ -78,47 +65,23 @@ class MessageResponse(MessageBase):
     model_config = ConfigDict(from_attributes=True)
 
 # Extraction Schemas
-class ExtractionBase(BaseModel):
-    session_id: int
-    extracted_symptom: str
-    severity: Optional[str] = None
-    duration: Optional[str] = None
-    additional_context: Optional[str] = None
-
-class ExtractionCreate(ExtractionBase):
-    pass
-
-class ExtractionResponse(ExtractionBase):
-    id: int
-    created_at: datetime
-
-    model_config = ConfigDict(from_attributes=True)
-
-# Triage Note Schemas
-class TriageNoteBase(BaseModel):
-    session_id: int
-    priority_level: Optional[str] = None
-    summary: Optional[str] = None
-    reasoning: Optional[str] = None
-    recommended_action: Optional[str] = None
-
-class TriageNoteCreate(TriageNoteBase):
-    pass
-
-class TriageNoteResponse(TriageNoteBase):
-    id: int
-    created_at: datetime
-    updated_at: datetime
-
-    model_config = ConfigDict(from_attributes=True)
-
-# Deterministic Triage Engine Schemas
 class ExtractionFact(BaseModel):
     symptom: str
     severity: Optional[str] = None
     duration_days: Optional[int] = None
     additional_context: Optional[str] = None
 
+class ExtractionCreate(ExtractionFact):
+    session_id: int
+
+class ExtractionResponse(ExtractionFact):
+    id: int
+    session_id: int
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+# Triage Engine Models
 class TriageInput(BaseModel):
     extractions: List[ExtractionFact] = []
     confidence_score: float = 1.0
@@ -137,3 +100,43 @@ class TriageResult(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+# Intake Workflow API Models
+class IntakeRequest(BaseModel):
+    patient_name: str
+    description: str
+
+class FollowupRequest(BaseModel):
+    answer: str
+
+class IntakeWorkflowResponse(BaseModel):
+    session_id: int
+    status: str  # "ROUTED", "NEEDS_FOLLOW_UP", "ESCALATED"
+    urgency: Optional[str] = None
+    department: Optional[str] = None
+    rule_id: Optional[str] = None
+    rule_name: Optional[str] = None
+    reason: Optional[str] = None
+    follow_up_questions: Optional[List[str]] = None
+    extractions: List[ExtractionFact] = []
+    triage_note_id: Optional[int] = None
+
+# Triage Note Schemas & Dashboard Payload
+class TriageNoteDetailResponse(BaseModel):
+    case_id: int
+    created_at: datetime
+    urgency: Optional[str] = None
+    department: Optional[str] = None
+    status: str
+    rule_id: Optional[str] = None
+    rule_name: Optional[str] = None
+    exact_rule_reason: Optional[str] = None
+    patient_reported: Dict[str, Any]
+    established_information: List[Dict[str, Any]]
+    unknown_information: Optional[str] = None
+    contradictions: Optional[str] = None
+    intake_summary: Optional[str] = None
+    escalation_reason: Optional[str] = None
+    conversation_history: List[Dict[str, Any]]
+
+class EscalateRequest(BaseModel):
+    reason: str
