@@ -4,13 +4,26 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
 from backend.config import settings
-from backend.database import init_db
+from backend.database import init_db, SessionLocal
+from backend.services.auth_service import seed_demo_users
+
 from backend.routes.health import router as health_router
+from backend.routes.auth import router as auth_router
+from backend.routes.intake import router as intake_router
+from backend.routes.triage_notes import router as triage_notes_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Initialize database tables on application startup
+    # Initialize database tables
     init_db()
+    
+    # Seed demo authentication accounts (nurse@clintrace.demo & doctor@clintrace.demo)
+    db = SessionLocal()
+    try:
+        seed_demo_users(db)
+    finally:
+        db.close()
+        
     yield
 
 app = FastAPI(
@@ -29,8 +42,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include API routes
+# Include API Routers
 app.include_router(health_router)
+app.include_router(auth_router)
+app.include_router(intake_router)
+app.include_router(triage_notes_router)
 
 @app.get("/")
 def root():
@@ -38,7 +54,8 @@ def root():
         "name": "ClinTrace Backend API",
         "version": "0.1.0",
         "docs": "/docs",
-        "health": "/api/health"
+        "health": "/api/health",
+        "rules": "/api/rules"
     }
 
 if __name__ == "__main__":
