@@ -1,126 +1,146 @@
 TRACK_ID=PS06
 
-# ClinTrace - Explainable Patient Intake & Triage Assistant
+# ClinTrace — Explainable Patient Intake & Triage Assistant
 
-ClinTrace is an explainable Patient Intake & Triage Assistant built for clinical settings. It features Gemini-powered clinical entity extraction combined with a 100% deterministic Python clinical rule engine to route patients safely and explainably to appropriate departments or escalate urgent/uncertain cases.
+**ClinTrace** is an explainable Patient Intake & Clinical Triage Operations System designed for modern healthcare environments. It combines **Google Gemini 1.5/2.0 API** for natural language clinical entity extraction with a **100% deterministic Python clinical rule engine** for safety-governed urgency classification and department routing.
 
 ---
 
-## One Command to Run
+## 🏗️ Tech Stack
+
+### Frontend Stack
+- **Framework**: React 18 (Vite, TypeScript, Single Page Application)
+- **Styling**: Vanilla CSS tokens & TailwindCSS (Custom Clinical Signal design system)
+- **Motion & UI**: Framer Motion 11 (Reduced-motion accessible animations), Lucide React Icons
+- **Routing**: React Router DOM v6
+
+### Backend Stack
+- **Framework**: FastAPI (Python 3.12, Asynchronous ASGI Server via Uvicorn)
+- **Database**: SQLite (SQLAlchemy 2.0 ORM, Pydantic v2 validation models)
+- **AI Service**: Google Gemini 1.5/2.0 Flash API (Strictly constrained for entity extraction)
+- **Security & Auth**: JWT Tokens, Salted SHA-256 password hashing, CORS Middleware
+- **Test Suite**: Pytest (30 comprehensive unit & API integration tests)
+
+---
+
+## ⚡ Quick Start (One-Command Launch)
 
 ```bash
+# 1. Install Python dependencies
 pip install -r requirements.txt
+
+# 2. Run the application (Starts FastAPI server & serves production React SPA)
 python app.py
 ```
 
-Runs on: **`http://localhost:8000`**
+Application URL: **`http://localhost:8000`**
 
-- Swagger API Docs: `http://localhost:8000/docs`
-- Health Check: `http://localhost:8000/api/health`
-- Rules Catalog: `http://localhost:8000/api/rules`
+### Access Links:
+- **Patient Intake UI**: `http://localhost:8000/`
+- **Nurse Operations Console**: `http://localhost:8000/nurse`
+- **Swagger API Docs**: `http://localhost:8000/docs`
+- **Health Endpoint**: `http://localhost:8000/api/health`
+- **Rules Catalog**: `http://localhost:8000/api/rules`
+
+### Staff Demo Account Credentials:
+- **Username / Email**: `nurse@clintrace.demo`
+- **Password**: `demo123`
 
 ---
 
-## External API & Environment Configuration
+## 🔄 End-to-End Workflow Diagram
 
-ClinTrace exclusively uses **Google Gemini** for natural language understanding and clinical fact extraction.
-
-- API Key is read from environment variable `GEMINI_API_KEY`.
-- Never hardcode secrets. If `GEMINI_API_KEY` is omitted or API fails, the backend safely falls back without producing fake triage decisions.
-
-```bash
-# Set your Gemini API key (Linux/macOS)
-export GEMINI_API_KEY="your_api_key_here"
-
-# PowerShell (Windows)
-$env:GEMINI_API_KEY="your_api_key_here"
+```
+[PATIENT] ──(1) Natural Language Complaint──► [REACT FRONTEND]
+                                                    │
+                                                    ▼ (POST /api/intake)
+                                           [FASTAPI SERVER]
+                                                    │
+                             ┌──────────────────────┴──────────────────────┐
+                             ▼                                             ▼
+               [GEMINI 1.5/2.0 FLASH API]                       [DATABASE / STORAGE]
+               (Extracts Facts & Symptoms)                       (Persists Intake Session)
+                             │                                             │
+                             └──────────────────────┬──────────────────────┘
+                                                    │
+                                                    ▼
+                                    [MISSING INFO / QUESTION CHECK]
+                                    ├─► If missing: Asks max 1-2 follow-up Qs
+                                    └─► If complete: Calls Triage Engine
+                                                    │
+                                                    ▼
+                                     [PYTHON DETERMINISTIC RULE ENGINE]
+                                     (Evaluates data/rules.json Safety Rules)
+                                                    │
+                             ┌──────────────────────┴──────────────────────┐
+                             ▼                                             ▼
+                   [RULE MATCHED: ROUTED]                        [UNCERTAIN: ESCALATED]
+                   Assigns Urgency Badge                         Shows "ESCALATED TO STAFF"
+                   & Department Target                           Pushes to Urgent Nurse Queue
+                             │                                             │
+                             └──────────────────────┬──────────────────────┘
+                                                    │
+                                                    ▼
+                                     [NURSE OPERATIONS CONSOLE]
+                                     (Priority Queue, Metrics, & 5-Step Rule Trace)
 ```
 
 ---
 
-## Phase-by-Phase Architecture & Status
+## 🛡️ Clinical Safety & Governance Principles
 
-### Phase 1 — Backend Foundation
-- **Core Stack**: Python 3.11+, FastAPI, Uvicorn, SQLite, SQLAlchemy 2.0, Pydantic v2, python-dotenv, pytest.
-- **Database Schema**: SQLite (`data/clintrace.db`) with 6 core ORM models (`users`, `patients`, `intake_sessions`, `messages`, `extractions`, `triage_notes`).
-- **Health Check**: `GET /api/health` verifying API and SQLite DB connection status.
-
-### Phase 3 — Deterministic Triage Engine
-- **Strict Boundary**: Gemini extracts facts; Python decides triage.
-- **Rule Storage (`data/rules.json`)**: Human-readable clinical rules with explicit numerical `priority`, `urgency`, `department`, `conditions`, and `reason`.
-- **Triage Rules**:
-  - `CHEST-01`: Severe Chest Pain $\rightarrow$ `Emergency` / `Emergency Medicine`
-  - `BREATH-01`: Severe Breathing Difficulty $\rightarrow$ `Emergency` / `Emergency Medicine`
-  - `INJURY-01`: Severe Injury $\rightarrow$ `Emergency` / `Emergency Medicine`
-  - `ABD-01`: Severe Abdominal Pain $\rightarrow$ `Emergency` / `Emergency Medicine`
-  - `FEVER-02`: Persistent Fever ($\ge$ 3 days) $\rightarrow$ `Urgent` / `General Medicine`
-  - `FEVER-01`: Recent Mild Fever ($\le$ 2 days) $\rightarrow$ `Standard` / `General Medicine`
-  - `INJURY-02`: Minor Injury $\rightarrow$ `Non-Urgent` / `Outpatient Clinic`
-  - `ABD-02`: Mild Abdominal Discomfort $\rightarrow$ `Non-Urgent` / `General Medicine`
-  - `GEN-01`: General Mild Symptoms $\rightarrow$ `Non-Urgent` / `Outpatient Clinic`
-- **Safety Escalation**: Automatic escalation (`status: ESCALATED`) for contradictions, missing info, low confidence (< 0.70), or unmatched clinical profiles.
-
-### Phase 4 — API Orchestration & Authentication (Backend Freeze)
-- **Local Authentication**: Seeded demo accounts (`nurse@clintrace.demo` / `demo123`, `doctor@clintrace.demo` / `demo123`) using salted SHA-256 password hashing and JWT tokens.
-- **Intake & Follow-up Workflow**:
-  - `POST /api/intake`: Intake creation, entity extraction, missing info check (up to 2 follow-up questions), deterministic triage evaluation, and triage note generation.
-  - `POST /api/intake/{id}/followup`: Answer merging, contradiction detection, follow-up limitation, and triage evaluation.
-- **Nurse Queue Dashboard**:
-  - `GET /api/triage-notes`: Sorted newest first with filters (`urgency`, `status`, `department`).
-  - `GET /api/triage-notes/{id}`: Full case view.
-  - `POST /api/triage-notes/{id}/escalate`: Manual case escalation by clinician.
+1. **Strict LLM Boundary**: Gemini is **never** permitted to decide patient urgency, diagnosis, or department routing. Gemini extracts symptoms, severity, and duration parameters only.
+2. **Deterministic Governance**: All triage classifications (`Emergency`, `Urgent`, `Standard`, `Non-Urgent`) and department assignments are computed exclusively by Python code executing static rules in `data/rules.json`.
+3. **Safe Default Escalation**: Any patient input with contradictions, low extraction confidence (< 0.70), persistent missing info, or unmatched symptoms automatically triggers `ESCALATED TO STAFF` review.
+4. **No Diagnosis**: ClinTrace clearly displays *"This is a routing recommendation, not a diagnosis"* across patient and staff interfaces.
 
 ---
 
-## Project Structure
+## 📂 Project Structure
 
 ```
 CLIN_TRACE/
-├── app.py                  # Single-command server launcher (0.0.0.0:8000)
+├── app.py                  # Server entrypoint (serves FastAPI APIs & React SPA from frontend/dist)
 ├── requirements.txt        # Backend dependencies
-├── README.md               # Hackathon submission documentation (TRACK_ID=PS06)
-├── API_CONTRACT.md         # Frozen REST API contract for frontend integration
-├── .env.example            # Environment variables template
-├── .env                    # Local environment variables (git-ignored)
-├── .gitignore              # Ignored files (.env, data/*.db, .venv, etc.)
+├── README.md               # Complete project documentation & guide (TRACK_ID=PS06)
+├── API_CONTRACT.md         # REST API contract specification
+├── .env.example            # Environment configuration template
+├── .gitignore              # Git ignore rules (.env, data/*.db, node_modules, etc.)
 ├── backend/
-│   ├── __init__.py
-│   ├── config.py           # Environment configuration loader
-│   ├── database.py         # SQLAlchemy engine, session maker, init_db()
-│   ├── models.py           # SQLAlchemy ORM models
-│   ├── schemas.py          # Pydantic validation models & API payloads
+│   ├── config.py           # Environment settings loader
+│   ├── database.py         # SQLAlchemy engine & session factory
+│   ├── models.py           # ORM models (Patient, IntakeSession, Message, Extraction, TriageNote, User)
+│   ├── schemas.py          # Pydantic schemas for API request/response validation
 │   ├── routes/
-│   │   ├── __init__.py
-│   │   ├── health.py       # GET /api/health
-│   │   ├── auth.py         # POST /api/auth/login, /api/auth/logout, GET /api/auth/me
-│   │   ├── intake.py       # POST /api/intake, POST /api/intake/{id}/followup
-│   │   └── triage_notes.py # GET /api/triage-notes, GET /api/rules, POST escalate
+│   │   ├── health.py       # Health check API (/api/health)
+│   │   ├── auth.py         # Login, Logout, Me APIs (/api/auth/*)
+│   │   ├── intake.py       # Intake submission & follow-up endpoints (/api/intake/*)
+│   │   └── triage_notes.py # Nurse queue, rule catalog, & manual escalation endpoints (/api/triage-notes/*)
 │   └── services/
-│       ├── __init__.py
-│       ├── auth_service.py # Hashing, JWT, and demo user seeder
-│       ├── gemini_service.py# Gemini entity extraction with offline fallback
-│       └── triage_engine.py# Deterministic Python rule engine
+│       ├── auth_service.py # Authentication, JWT generation, & password hashing
+│       ├── gemini_service.py# Gemini API extraction service with offline fallback
+│       └── triage_engine.py# Deterministic Python rule engine evaluator
 ├── data/
-│   ├── .gitkeep
-│   ├── rules.json          # Deterministic clinical rules definition
+│   ├── rules.json          # Deterministic clinical safety rules
 │   └── clintrace.db        # SQLite database
-└── tests/
-    ├── __init__.py
-    ├── conftest.py         # Pytest fixtures & in-memory database setup
-    ├── test_health.py      # Health API unit tests
-    ├── test_database.py    # Database initialization unit tests
-    ├── test_models.py      # ORM model unit tests
-    ├── test_triage_engine.py # Deterministic triage rule engine tests
-    ├── test_auth.py        # Authentication unit tests
-    └── test_intake_workflow.py # Intake & follow-up workflow unit tests
+├── frontend/
+│   ├── package.json        # Frontend React dependencies & build scripts
+│   ├── vite.config.ts      # Vite bundler configuration
+│   ├── src/
+│   │   ├── api/client.ts   # API client for backend communication
+│   │   ├── components/     # UI design system (ClinicalSignal, RuleTrace, Badge, Card, etc.)
+│   │   ├── types/api.ts    # TypeScript interface definitions matching backend contract
+│   │   └── views/          # Patient & Nurse views (PatientIntake, PatientResult, NurseLogin, NurseDashboard, NurseCaseDetail)
+└── tests/                  # Pytest automated test suite (30 passed tests)
 ```
 
 ---
 
-## Running Automated Tests
+## 🧪 Running Automated Tests
 
 Run the complete 30-test suite using `pytest`:
 
 ```bash
-pytest -v
+.venv\Scripts\pytest -v
 ```
+
