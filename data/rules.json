@@ -1,0 +1,119 @@
+[
+  {
+    "rule_id": "CHEST-01",
+    "name": "Severe Chest Pain",
+    "description": "Chest pain marked as severe or acute",
+    "priority": 100,
+    "urgency": "Emergency",
+    "department": "Emergency Medicine",
+    "conditions": {
+      "symptoms": ["chest pain", "chest tightness", "angina", "chest discomfort"],
+      "severity_levels": ["severe", "critical", "extreme", "high", "8/10", "9/10", "10/10"]
+    },
+    "reason": "Severe chest pain reported, indicating potential acute cardiac or pulmonary emergency."
+  },
+  {
+    "rule_id": "BREATH-01",
+    "name": "Severe Breathing Difficulty",
+    "description": "Shortness of breath or dyspnea marked as severe",
+    "priority": 100,
+    "urgency": "Emergency",
+    "department": "Emergency Medicine",
+    "conditions": {
+      "symptoms": ["breathing difficulty", "shortness of breath", "dyspnea", "wheezing", "gasping"],
+      "severity_levels": ["severe", "critical", "extreme", "high", "8/10", "9/10", "10/10"]
+    },
+    "reason": "Severe breathing difficulty reported, requiring immediate airway and respiratory assessment."
+  },
+  {
+    "rule_id": "INJURY-01",
+    "name": "Severe Injury",
+    "description": "Trauma or physical injury marked as severe",
+    "priority": 100,
+    "urgency": "Emergency",
+    "department": "Emergency Medicine",
+    "conditions": {
+      "symptoms": ["injury", "trauma", "fracture", "deep wound", "head injury", "bleeding"],
+      "severity_levels": ["severe", "critical", "extreme", "high", "8/10", "9/10", "10/10"]
+    },
+    "reason": "Severe injury or trauma reported, requiring immediate emergency evaluation."
+  },
+  {
+    "rule_id": "ABD-01",
+    "name": "Severe Abdominal Pain",
+    "description": "Acute or severe abdominal pain",
+    "priority": 90,
+    "urgency": "Emergency",
+    "department": "Emergency Medicine",
+    "conditions": {
+      "symptoms": ["abdominal pain", "stomach pain", "stomach ache", "belly pain"],
+      "severity_levels": ["severe", "critical", "extreme", "high", "8/10", "9/10", "10/10"]
+    },
+    "reason": "Severe abdominal pain reported, requiring urgent evaluation for acute abdomen."
+  },
+  {
+    "rule_id": "FEVER-02",
+    "name": "Persistent Fever",
+    "description": "Fever lasting 3 or more days",
+    "priority": 60,
+    "urgency": "Urgent",
+    "department": "General Medicine",
+    "conditions": {
+      "symptoms": ["fever", "high temperature", "pyrexia"],
+      "min_duration_days": 3
+    },
+    "reason": "Fever reported lasting 3 or more days, meeting persistent fever criteria for urgent medical review."
+  },
+  {
+    "rule_id": "FEVER-01",
+    "name": "Recent Mild Fever",
+    "description": "Fever lasting less than 3 days",
+    "priority": 30,
+    "urgency": "Standard",
+    "department": "General Medicine",
+    "conditions": {
+      "symptoms": ["fever", "high temperature", "pyrexia"],
+      "max_duration_days": 2
+    },
+    "reason": "Recent fever reported under 3 days duration without severe features."
+  },
+  {
+    "rule_id": "INJURY-02",
+    "name": "Minor Injury",
+    "description": "Minor wound, bruise, or superficial injury",
+    "priority": 20,
+    "urgency": "Non-Urgent",
+    "department": "Outpatient Clinic",
+    "conditions": {
+      "symptoms": ["injury", "bruise", "cut", "scrape", "sprain"],
+      "severity_levels": ["mild", "minor", "low", "1/10", "2/10", "3/10"]
+    },
+    "reason": "Minor injury with mild severity reported."
+  },
+  {
+    "rule_id": "ABD-02",
+    "name": "Mild Abdominal Discomfort",
+    "description": "Mild abdominal discomfort or stomach ache",
+    "priority": 20,
+    "urgency": "Non-Urgent",
+    "department": "General Medicine",
+    "conditions": {
+      "symptoms": ["abdominal pain", "stomach pain", "stomach ache", "indigestion"],
+      "severity_levels": ["mild", "minor", "low", "1/10", "2/10", "3/10"]
+    },
+    "reason": "Mild abdominal discomfort reported without severe symptoms."
+  },
+  {
+    "rule_id": "GEN-01",
+    "name": "General Mild Symptoms",
+    "description": "General non-urgent symptoms like mild cold, sore throat, or minor fatigue",
+    "priority": 10,
+    "urgency": "Non-Urgent",
+    "department": "Outpatient Clinic",
+    "conditions": {
+      "symptoms": ["cough", "cold", "sore throat", "fatigue", "headache", "runny nose"],
+      "severity_levels": ["mild", "minor", "low", "1/10", "2/10", "3/10", "moderate", "4/10", "5/10"]
+    },
+    "reason": "General non-urgent symptoms suitable for routine outpatient consultation."
+  }
+]
