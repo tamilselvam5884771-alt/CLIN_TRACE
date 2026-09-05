@@ -81,12 +81,20 @@ Return strictly valid JSON with this structure:
             resp = client.post(url, json=payload, headers=headers)
             if resp.status_code == 200:
                 data = resp.json()
-                content_text = data["candidates"][0]["content"]["parts"][0]["text"]
+                content_text = data["candidates"][0]["content"]["parts"][0]["text"].strip()
+                if content_text.startswith("```"):
+                    lines = content_text.splitlines()
+                    if lines[0].startswith("```"):
+                        lines = lines[1:]
+                    if lines and lines[-1].startswith("```"):
+                        lines = lines[:-1]
+                    content_text = "\n".join(lines).strip()
                 parsed = json.loads(content_text)
                 return self._sanitize_extraction_payload(parsed)
             else:
                 logger.warning(f"Gemini API returned status {resp.status_code}")
                 return self._fallback_clinical_parser(text, history)
+
 
     def _fallback_clinical_parser(self, text: str, history: Optional[List[Dict[str, str]]] = None) -> Dict[str, Any]:
         """
