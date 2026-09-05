@@ -12,12 +12,14 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String(100), unique=True, index=True, nullable=False)
     email = Column(String(255), unique=True, index=True, nullable=False)
+    password_hash = Column(String(255), nullable=True)
     role = Column(String(50), nullable=False, default="staff")
     created_at = Column(DateTime, default=utc_now, nullable=False)
     updated_at = Column(DateTime, default=utc_now, onupdate=utc_now, nullable=False)
 
     # Relationships
     intake_sessions = relationship("IntakeSession", back_populates="user", cascade="all, delete-orphan")
+
 
 
 class Patient(Base):
