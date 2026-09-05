@@ -72,7 +72,8 @@ def test_manual_escalation(client):
     # 1. Create a routed intake
     payload = {
         "patient_name": "Edward Elric",
-        "description": "I have mild sore throat."
+        "description": "I have had a mild sore throat for 1 day."
+
     }
     init_res = client.post("/api/intake", json=payload)
     triage_note_id = init_res.json()["triage_note_id"]

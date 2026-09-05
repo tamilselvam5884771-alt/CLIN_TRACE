@@ -83,9 +83,10 @@ def start_intake(payload: IntakeRequest, db: Session = Depends(get_db)):
 
     # 5. Check if follow-up question is required (Limit follow-ups to prevent infinite loops)
     has_missing_info = extracted_data.get("has_missing_info", False)
+    has_contradiction = extracted_data.get("has_contradiction", False)
     follow_up_qs = extracted_data.get("follow_up_questions", [])
 
-    if has_missing_info and follow_up_qs:
+    if has_missing_info and follow_up_qs and not has_contradiction:
         session.status = "needs_followup"
         db.commit()
 
@@ -104,6 +105,7 @@ def start_intake(payload: IntakeRequest, db: Session = Depends(get_db)):
             follow_up_questions=follow_up_qs,
             extractions=extractions
         )
+
 
     # 6. Run Deterministic Python Triage Engine
     triage_input = TriageInput(
